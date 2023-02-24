@@ -15,8 +15,8 @@ const utils = require("./routes/utilsRoutes");
 const errorMiddleware = require("./middleware/error");
 
 app.use("/api/v1", users);
-// app.use("/api/v1", posts);
-// app.use("/api/v1", doubts);
+app.use("/api/v1", posts);
+app.use("/api/v1", doubts);
 // app.use("/api/v1", answers);
 // app.use("/api/v1", utils);
 app.use(errorMiddleware);

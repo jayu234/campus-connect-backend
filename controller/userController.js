@@ -78,21 +78,16 @@ exports.updateUser = catchAcyncError(async (req, res, next) => {
 });
 
 exports.deleteUser = catchAcyncError(async (req, res, next) => {
-    const userToDelete = await User.findOne({ _id: req.params.id, deleted: false });
-
-    if (!userToDelete) {
-        return next(new ErrorHandler(404, "User not found"));
+    if (req.user.role !== "admin") {
+        return next(new ErrorHandler(401, "You are not allowed to access this resource."));
     }
-    userToDelete['deleted'] = true;
-    const user = await User.findByIdAndUpdate(req.params.id, userToDelete, {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false
-    });
+    const user = await User.findById(req.params.id);
 
     if (!user) {
-        return next(new ErrorHandler(500, "Couldn't delete the user."));
+        return next(new ErrorHandler(404, "User not found"));
     }
+
+    await user.remove();
     return res.status(200).json({
         success: true,
         message: "User deleted successfully."
@@ -100,7 +95,7 @@ exports.deleteUser = catchAcyncError(async (req, res, next) => {
 });
 
 exports.getUser = catchAcyncError(async (req, res, next) => {
-    const user = await User.findOne({ _id: req.user.id, deleted: false });
+    const user = await User.findById(req.user.id);
     if (!user) {
         return next(new ErrorHandler(404, "User not found"));
     }
@@ -111,10 +106,10 @@ exports.getUser = catchAcyncError(async (req, res, next) => {
 });
 
 exports.getAllUsers = catchAcyncError(async (req, res, next) => {
-    if (req.user.role != "admin") {
+    if (req.user.role !== "admin") {
         return next(new ErrorHandler(401, "You are not allowed to access this resource."));
     }
-    const allUsers = await User.find({ deleted: false });
+    const allUsers = await User.find({});
     if (!allUsers) {
         return next(new ErrorHandler(500, "Some error occurred."));
     }
