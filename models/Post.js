@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const postSchema = new mongoose.Schema({
-    auther: {
+    author: {
         type: {
             _id: mongoose.Schema.Types.ObjectId,
             username: String,
@@ -17,15 +17,17 @@ const postSchema = new mongoose.Schema({
     },
     title: {
         type: String,
-        required: true
+        required: true,
+        minLength: [10, "Please provide valid title."]
     },
     content: {
-        type: String
+        type: String,
+        require: true,
     },
     tags: {
         type: [{ type: String }],
         default: [],
-        min: [3, "Please provide required tags"]
+        minLength: [3, "Please provide required tags"]
     },
     location: {
         type: String
@@ -47,6 +49,8 @@ const postSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    likes: { type: Number, default: 0 },
+    dislikes: { type: Number, default: 0 },
     createdAt: {
         type: Date,
         default: Date.now()
