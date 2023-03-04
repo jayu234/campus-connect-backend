@@ -3,7 +3,10 @@ const app = express();
 const cookieparser =require("cookie-parser");
 const cors = require("cors");
 
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+}));
 app.use(express.json());
 app.use(cookieparser());
 
