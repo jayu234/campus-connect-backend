@@ -8,9 +8,13 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: [true, "Please choose a username"],
+    
     unique: true,
   },
-  name: {
+  firstName: {
+    type: String,
+  },
+  lastName: {
     type: String,
   },
   email: {

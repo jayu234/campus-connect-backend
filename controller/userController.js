@@ -18,7 +18,11 @@ exports.createUser = catchAcyncError(async (req, res, next) => {
     if (!user) {
         return next(new ErrorHandler(500, "Signup failed."));
     }
-    sendToken(user, res, 201, "Signed up successfully")
+    // sendToken(user, res, 201, "Signed up successfully")
+    res.status(201).json({
+        success: true,
+        message: "Signup successfully!!"
+    })
 })
 
 exports.userLogin = catchAcyncError(async (req, res, next) => {
