@@ -48,10 +48,7 @@ exports.userLogin = catchAcyncError(async (req, res, next) => {
 })
 
 exports.userLogout = catchAcyncError(async (req, res, next) => {
-    res.cookie("token", null, {
-        expires: new Date(Date.now()),
-        httpOnly: true
-    });
+    res.clearCookie('token');
 
     res.status(200).json({
         success: true,
