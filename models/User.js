@@ -3,12 +3,13 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { timeStamp } = require("console");
 
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: [true, "Please choose a username"],
-    
+
     unique: true,
   },
   firstName: {
@@ -83,13 +84,11 @@ const userSchema = new mongoose.Schema({
       ref: "Post",
     }
   ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
   resetPasswordToken: String,
-  resetPasswordExpire: Date
-});
+  resetPasswordExpire: Date,
+},
+  { timestamps: true }
+);
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {

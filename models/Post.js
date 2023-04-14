@@ -24,6 +24,9 @@ const postSchema = new mongoose.Schema({
         type: String,
         require: true,
     },
+    type: {
+        type: String
+    },
     tags: {
         type: [{ type: String }],
         default: [],
@@ -45,17 +48,17 @@ const postSchema = new mongoose.Schema({
         }],
         default: []
     },
-    edited:{
+    edited: {
         type: Boolean,
         default: false
     },
-    likes: { type: Number, default: 0 },
-    dislikes: { type: Number, default: 0 },
-    createdAt: {
-        type: Date,
-        default: Date.now()
-    }
-})
+    likes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }]
+},
+    { timestamps: true }
+)
 
 const Post = mongoose.model("posts", postSchema);
 

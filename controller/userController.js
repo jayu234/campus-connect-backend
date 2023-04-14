@@ -5,6 +5,7 @@ const sendEmail = require("../utils/sendPwdResetEmail");
 const crypto = require("crypto");
 
 const User = require("../models/User");
+const Topic = require("../models/Topic");
 
 exports.createUser = catchAcyncError(async (req, res, next) => {
 
@@ -15,10 +16,23 @@ exports.createUser = catchAcyncError(async (req, res, next) => {
             url: "https://www.google.com",
         },
     });
-    if (!user) {
-        return next(new ErrorHandler(500, "Signup failed."));
+
+    const tags = req.body.interests;
+    const bulkOps = [];
+    for (let i = 0; i < tags.length; i++) {
+        const tagName = tags[i];
+        bulkOps.push({
+            updateOne: {
+                filter: { label: tagName },
+                update: { $addToSet: { followers: user._id } }
+            }
+        });
     }
     // sendToken(user, res, 201, "Signed up successfully")
+    const result = await Topic.bulkWrite(bulkOps);
+    if (!user || !result) {
+        return next(new ErrorHandler(500, "Signup failed."));
+    }
     res.status(201).json({
         success: true,
         message: "Signup successfully!!"
@@ -48,7 +62,11 @@ exports.userLogin = catchAcyncError(async (req, res, next) => {
 })
 
 exports.userLogout = catchAcyncError(async (req, res, next) => {
-    res.clearCookie('token');
+    res.clearCookie('token', {
+        expires: new Date(Date.now()),
+        httpOnly: true,
+        path: '/'
+    });
 
     res.status(200).json({
         success: true,
@@ -87,7 +105,14 @@ exports.deleteUser = catchAcyncError(async (req, res, next) => {
     if (!user) {
         return next(new ErrorHandler(404, "User not found"));
     }
+    const bulkOps = user.interests.map((interest) => ({
+        updateOne: {
+            filter: { label: interest },
+            update: { $pull: { followers: user._id } },
+        },
+    }));
 
+    await Topic.bulkWrite(bulkOps);
     await user.remove();
     return res.status(200).json({
         success: true,
@@ -100,9 +125,9 @@ exports.getUser = catchAcyncError(async (req, res, next) => {
     if (!user) {
         return next(new ErrorHandler(404, "User not found"));
     }
-    return res.status(201).json({
+    return res.status(200).json({
         success: true,
-        result: [user],
+        result: user,
     });
 });
 

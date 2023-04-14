@@ -43,13 +43,13 @@ const doubtSchema = new mongoose.Schema({
         }],
         default: []
     },
-    likes: { type: Number, default: 0 },
-    dislikes: { type: Number, default: 0 },
-    createdAt: {
-        type: Date,
-        default: Date.now()
-    }
-})
+    likes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }]
+},
+    { timestamps: true }
+)
 
 const Doubt = mongoose.model("doubts", doubtSchema);
 module.exports = Doubt;

@@ -1,6 +1,7 @@
 const catchAcyncError = require("../middleware/catchAcyncError");
 const Answer = require("../models/Answer");
-const Doubt = require("../models/Doubt")
+const Doubt = require("../models/Doubt");
+const Topic = require("../models/Topic");
 const ErrorHandler = require("../utils/ErrorHandler");
 const mongoose = require("mongoose")
 
@@ -18,8 +19,20 @@ exports.createDoubt = catchAcyncError(async (req, res, next) => {
         },
         ...req.body
     });
+    const tags = req.body.tags;
+    const bulkOps = [];
+    for (let i = 0; i < tags.length; i++) {
+        const tagName = tags[i];
+        bulkOps.push({
+            updateOne: {
+                filter: { label: tagName },
+                update: { $addToSet: { posts: doubt._id } }
+            }
+        });
+    }
 
-    if (!doubt) {
+    const result = await Topic.bulkWrite(bulkOps);
+    if (!doubt || !result) {
         return next(new ErrorHandler(500, "Failed to create doubt."));
     }
     return res.status(201).json({
@@ -67,6 +80,15 @@ exports.deleteDoubt = catchAcyncError(async (req, res, next) => {
         // Delete all the corresponding answers
         await Answer.deleteMany({ _id: { $in: doubt.answers } }).session(session);
 
+        const bulkOps = doubt.tags.map((tag) => ({
+            updateOne: {
+                filter: { label: tag },
+                update: { $pull: { posts: doubt._id } },
+            },
+        }));
+    
+        await Topic.bulkWrite(bulkOps);
+
         // Delete the doubt
         await doubt.deleteOne({ session });
 
@@ -105,3 +127,28 @@ exports.getAllDoubtsOfUser = catchAcyncError(async (req, res, next) => {
         result: allDoubts
     })
 })
+
+exports.likeUnlikeDoubt = catchAcyncError(async(req,res,next)=>{
+    let doubt = await Doubt.findById(req.params.id);
+    const index = doubt.likes.indexOf(req.user._id);
+
+    if(!doubt){
+        return next(new ErrorHandler(500, "Internal server error"));
+    }
+    if(index!==-1){
+        doubt.likes.splice(index, 1);
+        await doubt.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Unliked successfully!!"
+        })
+    }else{
+        doubt.likes.push(req.user._id);
+        await doubt.save();
+        res.status(200).json({
+            success: true,
+            message: "Liked successfully!!"
+        })
+    }
+});

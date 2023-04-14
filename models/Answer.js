@@ -37,17 +37,17 @@ const answerSchema = new mongoose.Schema({
         }],
         default: []
     },
-    likes: { type: Number, default: 0 },
-    dislikes: { type: Number, default: 0 },
+    likes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
     edited: {
         type: Boolean,
         default: false
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now()
     }
-})
+},
+    { timestamps: true }
+)
 
 const Answer = mongoose.model("answers", answerSchema);
 module.exports = Answer;

@@ -15,12 +15,14 @@ const posts = require("./routes/postRoutes");
 const doubts = require("./routes/doubtRoutes");
 const answers = require("./routes/answerRoutes");
 const utils = require("./routes/utilsRoutes");
+const topic = require("./routes/topicRoutes");
 const errorMiddleware = require("./middleware/error");
 
 app.use("/api/v1", users);
 app.use("/api/v1", posts);
 app.use("/api/v1", doubts);
 app.use("/api/v1", answers);
+app.use("/api/v1", topic);
 app.use("/api/v1", utils);
 app.use(errorMiddleware);
 module.exports = app;

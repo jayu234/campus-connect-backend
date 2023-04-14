@@ -115,3 +115,28 @@ exports.getAllAnswersOfUser = catchAcyncError(async (req, res, next) => {
     result: allAnswers
   })
 });
+
+exports.likeUnlikeAnswer = catchAcyncError(async (req, res, next) => {
+  let answer = await Answer.findById(req.params.id);
+  const index = answer.likes.indexOf(req.user._id);
+
+  if (!answer) {
+    return next(new ErrorHandler(500, "Internal server error"));
+  }
+  if (index !== -1) {
+    answer.likes.splice(index, 1);
+    await answer.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Unliked successfully!!"
+    })
+  } else {
+    answer.likes.push(req.user._id);
+    await answer.save();
+    res.status(200).json({
+      success: true,
+      message: "Liked successfully!!"
+    })
+  }
+});
