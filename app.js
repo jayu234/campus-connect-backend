@@ -16,6 +16,7 @@ const doubts = require("./routes/doubtRoutes");
 const answers = require("./routes/answerRoutes");
 const utils = require("./routes/utilsRoutes");
 const topic = require("./routes/topicRoutes");
+const event = require("./routes/eventRoutes");
 const errorMiddleware = require("./middleware/error");
 
 app.use("/api/v1", users);
@@ -24,5 +25,6 @@ app.use("/api/v1", doubts);
 app.use("/api/v1", answers);
 app.use("/api/v1", topic);
 app.use("/api/v1", utils);
+app.use("/api/v1", event);
 app.use(errorMiddleware);
 module.exports = app;

@@ -54,7 +54,19 @@ const userSchema = new mongoose.Schema({
     minlength: [10, "Please provide a college name"],
   },
   city: {
-    type: String,
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number],
+      required: true
+    },
+    label: {
+      type: String,
+      required: true
+    }
   },
   role: {
     type: String,

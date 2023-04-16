@@ -24,16 +24,10 @@ const postSchema = new mongoose.Schema({
         type: String,
         require: true,
     },
-    type: {
-        type: String
-    },
     tags: {
         type: [{ type: String }],
         default: [],
         minLength: [3, "Please provide required tags"]
-    },
-    location: {
-        type: String
     },
     images: {
         type: [{
