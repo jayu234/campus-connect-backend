@@ -3,19 +3,19 @@ const ErrorHandler = require("../utils/ErrorHandler");
 const sendToken = require("../utils/sendJwtToken");
 const sendEmail = require("../utils/sendPwdResetEmail");
 const crypto = require("crypto");
-
 const User = require("../models/User");
 const Topic = require("../models/Topic");
+const cloudinary = require("cloudinary").v2;
 
 exports.createUser = catchAcyncError(async (req, res, next) => {
-
-    const user = await User.create({
-        ...req.body,
-        avatar: {
-            public_id: "654120",
-            url: "https://www.google.com",
-        },
-    });
+    if (req.body.role) {
+        return next(new ErrorHandler(400, "Invalid request!!"));
+    }
+    const isExisting = await User.findOne({ $match: { email: req.body.email, username: req.body.username, phone: req.body.phone } });
+    if (isExisting) {
+        return next(new ErrorHandler("User already exist."));
+    }
+    const user = await User.create(req.body);
 
     const tags = req.body.interests;
     const bulkOps = [];
@@ -75,20 +75,26 @@ exports.userLogout = catchAcyncError(async (req, res, next) => {
 })
 
 exports.updateUser = catchAcyncError(async (req, res, next) => {
-    const edited = await User.findByIdAndUpdate(req.user.id, {
-        ...req.body,
-        avatar: {
-            public_id: "654120",
-            url: "https://www.google.com",
-        }
-    }, {
+    if (req.body.password || req.body.role) {
+        return next(new ErrorHandler(400, "Invalid request!!"));
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (req.body.avatar) {
+        await cloudinary.uploader.destroy(user.avatar.public_id);
+        const uploaded = await cloudinary.uploader.upload(req.body.avatar, { folder: "avatars"})
+        req.body.avatar.public_id = uploaded.public_id
+        req.body.avatar.url = uploaded.secure_url
+    }
+    const edited = await User.findByIdAndUpdate(req.user._id, req.body, {
         new: true,
         runValidators: true,
         useFindAndModify: false
     });
 
     if (!edited) {
-        return next(new ErrorHandler(500, "Couldn't update user."));
+        return next(new ErrorHandler(500, "Couldn't update profile."));
     }
     return res.status(200).json({
         success: true,
@@ -97,10 +103,7 @@ exports.updateUser = catchAcyncError(async (req, res, next) => {
 });
 
 exports.deleteUser = catchAcyncError(async (req, res, next) => {
-    if (req.user.role !== "admin") {
-        return next(new ErrorHandler(401, "You are not allowed to access this resource."));
-    }
-    const user = await User.findById(req.params.id);
+    let user = await User.findById(req.user._id);
 
     if (!user) {
         return next(new ErrorHandler(404, "User not found"));
@@ -113,10 +116,13 @@ exports.deleteUser = catchAcyncError(async (req, res, next) => {
     }));
 
     await Topic.bulkWrite(bulkOps);
-    await user.remove();
+    user = user.remove();
+    if (!user) {
+        return next(new ErrorHandler(500, "Failed to delete the account"))
+    }
     return res.status(200).json({
         success: true,
-        message: "User deleted successfully."
+        message: "Account deleted successfully."
     })
 });
 

@@ -21,7 +21,8 @@ const eventSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: true
+        required: true,
+        minLength: [15, "Please provide valid description."]
     },
     image: {
         type: {
@@ -37,10 +38,11 @@ const eventSchema = new mongoose.Schema({
         type: {
             type: String,
             enum: ['Point'],
-            required: true
+            required: true,
+            default: "Point"
         },
         coordinates: {
-            type: [Number],
+            type: [Number], //[longitude, latitude]
             required: true
         },
         label:{
@@ -50,5 +52,5 @@ const eventSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-const Event = mongoose.model("events", eventSchema);
+const Event = mongoose.model("Event", eventSchema);
 module.exports = Event;

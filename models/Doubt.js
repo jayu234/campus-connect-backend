@@ -5,7 +5,8 @@ const doubtSchema = new mongoose.Schema({
         type: {
             _id: mongoose.Schema.Types.ObjectId,
             username: String,
-            name: String,
+            firstName: String,
+            lastName: String,
             email: String,
             avatar: {
                 public_id: String,
@@ -51,5 +52,5 @@ const doubtSchema = new mongoose.Schema({
     { timestamps: true }
 )
 
-const Doubt = mongoose.model("doubts", doubtSchema);
+const Doubt = mongoose.model("Doubt", doubtSchema);
 module.exports = Doubt;

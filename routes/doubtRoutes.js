@@ -8,6 +8,5 @@ const router = express.Router();
 router.route("/doubt/create").post(authenticate, createDoubt);
 router.route("/doubt/all").get(authenticate, getAllDoubtsOfUser);
 router.route("/doubt/:id").get(authenticate, getDoubtDetails).put(authenticate, updateDoubt).delete(authenticate, deleteDoubt);
-router.route("/doubt/:id/answers").get(authenticate, getAllAnswersOfADoubt);
 router.route("/doubt/like/:id").post(authenticate,likeUnlikeDoubt);
 module.exports = router;

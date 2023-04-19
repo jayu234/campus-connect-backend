@@ -2,6 +2,8 @@ const catchAcyncError = require("../middleware/catchAcyncError");
 const ErrorHandler = require("../utils/ErrorHandler");
 const Doubt = require("../models/Doubt");
 const Event = require("../models/Event");
+const Topic = require("../models/Topic");
+const { default: mongoose } = require("mongoose");
 
 exports.getFeedData = catchAcyncError(async (req, res, next) => {
     res.status(200).json({
@@ -11,7 +13,7 @@ exports.getFeedData = catchAcyncError(async (req, res, next) => {
 })
 
 exports.getRelatedDoubts = catchAcyncError(async (req, res, next) => {
-    const tags = req.user.interests;
+    const tags = req.user.interests.map(item => item.label);
     const relatedDoubts = await Doubt.aggregate([
         { $match: { tags: { $in: tags } } },
         {
@@ -47,6 +49,23 @@ exports.getRelatedDoubts = catchAcyncError(async (req, res, next) => {
     })
 })
 
+exports.getSimilarDoubts = catchAcyncError(async (req, res, next) => {
+    const doubt = await Doubt.findById(req.params.id);
+    if (!doubt) {
+        return next(new ErrorHandler(404, "Doubt not found"));
+    }
+    const similarDoubts = await Doubt.aggregate([
+        { $match: { $and: [{ _id: { $ne: doubt._id } }, { tags: { $in: doubt.tags } }] } },
+    ]);
+    if(!similarDoubts){
+        return next(new ErrorHandler(500, "Failed to get similar doubts"));
+    }
+    res.status(200).json({
+        success: true,
+        result: similarDoubts
+    })
+})
+
 exports.getNearbyEvents = catchAcyncError(async (req, res, next) => {
     const city = req.user.city;
     const longitude = city.coordinates[0];
@@ -63,7 +82,7 @@ exports.getNearbyEvents = catchAcyncError(async (req, res, next) => {
         }
     ])
 
-    if(!events){
+    if (!events) {
         return next(new ErrorHandler(500, "Couldn't get nearby events"));
     }
     res.status(200).json({

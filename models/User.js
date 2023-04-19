@@ -3,20 +3,20 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { timeStamp } = require("console");
 
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: [true, "Please choose a username"],
-
     unique: true,
   },
   firstName: {
     type: String,
+    required: true
   },
   lastName: {
     type: String,
+    required: true
   },
   email: {
     type: String,
@@ -34,6 +34,9 @@ const userSchema = new mongoose.Schema({
     type: Number,
     min: [15, "Please provide valid age"]
   },
+  gender: {
+    type: String
+  },
   phone: {
     type: String,
     unique: true,
@@ -43,15 +46,20 @@ const userSchema = new mongoose.Schema({
     public_id: {
       type: String,
       required: true,
+      default: "avatars/user_c1xesh"
     },
     url: {
       type: String,
       required: true,
+      default: "https://res.cloudinary.com/dfahmk4ht/image/upload/v1681826812/avatars/user_c1xesh.png"
     },
   },
   college: {
     type: String,
     minlength: [10, "Please provide a college name"],
+  },
+  course: {
+    type: String
   },
   city: {
     type: {
@@ -73,29 +81,32 @@ const userSchema = new mongoose.Schema({
     default: "user"
   },
   interests: [
-    { type: String }
+    {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Topic",
+        required: true
+      },
+      label: {
+        type: String,
+        required: true
+      }
+    }
   ],
-  reputation: {
-    type: Number,
+  skills: [{ type: String }],
+  links: {
+    type: [{
+      platform: {
+        type: String,
+        required: true
+      },
+      url: {
+        type: String,
+        required: true
+      },
+      _id: false
+    }]
   },
-  asked: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Doubt",
-    }
-  ],
-  answered: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Doubt",
-    }
-  ],
-  posts: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
-    }
-  ],
   resetPasswordToken: String,
   resetPasswordExpire: Date,
 },
@@ -127,5 +138,5 @@ userSchema.methods.getResetPasswordToken = function () {
   return resetToken;
 }
 
-const User = mongoose.model("users", userSchema);
+const User = mongoose.model("User", userSchema);
 module.exports = User;

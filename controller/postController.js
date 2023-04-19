@@ -124,7 +124,7 @@ exports.getPostDetails = catchAcyncError(async (req, res, next) => {
 })
 
 exports.getAllPostsOfUser = catchAcyncError(async (req, res, next) => {
-    const allPosts = await Post.find({ author: req.user });
+    const allPosts = await Post.find({ author: req.query.user_id });
     if (!allPosts) {
         return next(new ErrorHandler(404, "Failed to get all posts"));
     }

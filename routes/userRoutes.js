@@ -7,12 +7,14 @@ const router = express.Router();
 router.route('/user/signup').post(createUser);
 router.route('/user/login').post(userLogin);
 router.route('/user/logout').get(userLogout);
+
 router.route('/user/password/forgot').post(forgotPassword);
 router.route('/user/password/reset/:token').put(resetPassword);
 router.route('/user/password/update').put(authenticate, updatePassword);
-router.route('/user/update').put(authenticate, updateUser);
-router.route('/user/all').get(authenticate, getAllUsers);
-router.route('/user/profile').get(authenticate, getUser);
-router.route('/user/:id').delete(authenticate, deleteUser);
 
+router.route('/user/profile').get(authenticate, getUser);
+router.route('/user/profile/update').put(authenticate, updateUser);
+router.route('/user/profile/delete').delete(authenticate, deleteUser);
+
+router.route('/user/all').get(authenticate, getAllUsers);
 module.exports = router;

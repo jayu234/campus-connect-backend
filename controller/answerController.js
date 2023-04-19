@@ -94,19 +94,8 @@ exports.getAnswerDetails = catchAcyncError(async (req, res, next) => {
   });
 });
 
-exports.getAllAnswersOfADoubt = catchAcyncError(async (req, res, next) => {
-  const allAnswers = await Answer.find({ doubt: req.params.id });
-  if (!allAnswers || !(allAnswers.length)) {
-    return next(new ErrorHandler(404, "Failed to get answers."));
-  }
-  return res.status(200).json({
-    success: true,
-    result: allAnswers
-  })
-});
-
 exports.getAllAnswersOfUser = catchAcyncError(async (req, res, next) => {
-  const allAnswers = await Answer.find({ author: req.params.id });
+  const allAnswers = await Answer.find({ author: req.query.user_id });
   if (!allAnswers) {
     return next(new ErrorHandler(404, "Failed to get answers."));
   }

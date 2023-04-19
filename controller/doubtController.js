@@ -6,14 +6,15 @@ const ErrorHandler = require("../utils/ErrorHandler");
 const mongoose = require("mongoose")
 
 exports.createDoubt = catchAcyncError(async (req, res, next) => {
-    if(!req.body.images && (req.body.content.length < 10 )){
+    if (!req.body.images && (req.body.content.length < 10)) {
         return next(new ErrorHandler(400, "Please provide valid content."));
     }
     const doubt = await Doubt.create({
         author: {
             _id: req.user._id,
             username: req.user.username,
-            name: req.user.name,
+            firstName: req.user.firstName,
+            lastName: req.user.lastName,
             email: req.user.email,
             avatar: req.user.avatar
         },
@@ -26,7 +27,7 @@ exports.createDoubt = catchAcyncError(async (req, res, next) => {
         bulkOps.push({
             updateOne: {
                 filter: { label: tagName },
-                update: { $addToSet: { posts: doubt._id } }
+                update: { $addToSet: { doubts: doubt._id } }
             }
         });
     }
@@ -42,7 +43,7 @@ exports.createDoubt = catchAcyncError(async (req, res, next) => {
 })
 
 exports.updateDoubt = catchAcyncError(async (req, res, next) => {
-    if(!req.body.images && (req.body.content.length < 10 )){
+    if (!req.body.images && (req.body.content.length < 10)) {
         return next(new ErrorHandler(400, "Please provide valid content."));
     }
     const doubt = await Doubt.findByIdAndUpdate(req.params.id, {
@@ -74,24 +75,19 @@ exports.deleteDoubt = catchAcyncError(async (req, res, next) => {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-        // Find the doubt to be deleted
         const doubt = await Doubt.findById(req.params.id);
 
-        // Delete all the corresponding answers
         await Answer.deleteMany({ _id: { $in: doubt.answers } }).session(session);
 
         const bulkOps = doubt.tags.map((tag) => ({
             updateOne: {
                 filter: { label: tag },
-                update: { $pull: { posts: doubt._id } },
+                update: { $pull: { doubts: doubt._id } },
             },
         }));
-    
+
         await Topic.bulkWrite(bulkOps);
-
-        // Delete the doubt
         await doubt.deleteOne({ session });
-
         await session.commitTransaction();
     } catch (error) {
         await session.abortTransaction();
@@ -107,7 +103,7 @@ exports.deleteDoubt = catchAcyncError(async (req, res, next) => {
 })
 
 exports.getDoubtDetails = catchAcyncError(async (req, res, next) => {
-    const doubt = await Doubt.findById(req.params.id);
+    let doubt = await Doubt.findById(req.params.id).populate('answers');
     if (!doubt) {
         return next(new ErrorHandler(404, "Doubt not found!"));
     }
@@ -118,7 +114,7 @@ exports.getDoubtDetails = catchAcyncError(async (req, res, next) => {
 })
 
 exports.getAllDoubtsOfUser = catchAcyncError(async (req, res, next) => {
-    const allDoubts = await Doubt.find({ author: req.user });
+    const allDoubts = await Doubt.find({ author: req.query.user_id });
     if (!allDoubts) {
         return next(new ErrorHandler(404, "Failed to get all posts"));
     }
@@ -128,14 +124,14 @@ exports.getAllDoubtsOfUser = catchAcyncError(async (req, res, next) => {
     })
 })
 
-exports.likeUnlikeDoubt = catchAcyncError(async(req,res,next)=>{
+exports.likeUnlikeDoubt = catchAcyncError(async (req, res, next) => {
     let doubt = await Doubt.findById(req.params.id);
     const index = doubt.likes.indexOf(req.user._id);
 
-    if(!doubt){
+    if (!doubt) {
         return next(new ErrorHandler(500, "Internal server error"));
     }
-    if(index!==-1){
+    if (index !== -1) {
         doubt.likes.splice(index, 1);
         await doubt.save();
 
@@ -143,7 +139,7 @@ exports.likeUnlikeDoubt = catchAcyncError(async(req,res,next)=>{
             success: true,
             message: "Unliked successfully!!"
         })
-    }else{
+    } else {
         doubt.likes.push(req.user._id);
         await doubt.save();
         res.status(200).json({
