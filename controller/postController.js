@@ -12,6 +12,8 @@ exports.createPost = catchAcyncError(async (req, res, next) => {
         author: {
             _id: req.user._id,
             username: req.user.username,
+            firstName: req.user.firstName,
+            lastName: req.user.lastName,
             name: req.user.name,
             email: req.user.email,
             avatar: req.user.avatar
@@ -43,17 +45,7 @@ exports.updatePost = catchAcyncError(async (req, res, next) => {
     if (!req.body.images && (req.body.content.length < 50)) {
         return next(new ErrorHandler(400, "Please provide valid content."));
     }
-    const post = await Post.findByIdAndUpdate(req.params.id, {
-        author: {
-            _id: req.user._id,
-            username: req.user.username,
-            name: req.user.name,
-            email: req.user.email,
-            avatar: req.user.avatar
-        },
-        ...req.body,
-        edited: true
-    }, {
+    const post = await Post.findByIdAndUpdate(req.params.id, { ...req.body, edited: true},{
         new: true,
         runValidators: true,
         useFindAndModify: false
@@ -124,7 +116,8 @@ exports.getPostDetails = catchAcyncError(async (req, res, next) => {
 })
 
 exports.getAllPostsOfUser = catchAcyncError(async (req, res, next) => {
-    const allPosts = await Post.find({ author: req.query.user_id });
+    console.log(req.query.user_id);
+    const allPosts = await Post.find({ 'author._id': req.query.user_id });
     if (!allPosts) {
         return next(new ErrorHandler(404, "Failed to get all posts"));
     }

@@ -2,13 +2,45 @@ const catchAcyncError = require("../middleware/catchAcyncError");
 const ErrorHandler = require("../utils/ErrorHandler");
 const Doubt = require("../models/Doubt");
 const Event = require("../models/Event");
-const Topic = require("../models/Topic");
-const { default: mongoose } = require("mongoose");
+const Post = require("../models/Post");
 
 exports.getFeedData = catchAcyncError(async (req, res, next) => {
+    const user = req.user;
+    const userInterests = user.interests.map(interest => interest.label);
+    
+    const relevantPosts = await Post.aggregate([
+        // Match the posts that have tags matching any of the user's interests
+        { $match: { tags: { $in: userInterests } } },
+        // Add a relevance score to each post based on the number of matching tags
+        {
+            $addFields: {
+                relevanceScore: { $size: { $setIntersection: ['$tags', userInterests] } }
+            }
+        },
+        // Sort the posts by relevance score in descending order
+        { $sort: { relevanceScore: -1 } },
+        // Project the post fields and the relevance score
+        {
+            $project: {
+                _id: 1,
+                author: 1,
+                title: 1,
+                content: 1,
+                tags: 1,
+                images: 1,
+                edited: 1,
+                likes: 1,
+                createdAt: 1,
+                relevanceScore: 1
+            }
+        }
+    ]);
+    if(!relevantPosts){
+        return next(new ErrorHandler(500, "Failed to get feed data"));
+    }
     res.status(200).json({
         success: true,
-        results: []
+        result: relevantPosts
     })
 })
 
@@ -57,7 +89,7 @@ exports.getSimilarDoubts = catchAcyncError(async (req, res, next) => {
     const similarDoubts = await Doubt.aggregate([
         { $match: { $and: [{ _id: { $ne: doubt._id } }, { tags: { $in: doubt.tags } }] } },
     ]);
-    if(!similarDoubts){
+    if (!similarDoubts) {
         return next(new ErrorHandler(500, "Failed to get similar doubts"));
     }
     res.status(200).json({

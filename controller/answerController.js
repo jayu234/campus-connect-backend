@@ -95,7 +95,7 @@ exports.getAnswerDetails = catchAcyncError(async (req, res, next) => {
 });
 
 exports.getAllAnswersOfUser = catchAcyncError(async (req, res, next) => {
-  const allAnswers = await Answer.find({ author: req.query.user_id });
+  const allAnswers = await Answer.find({ 'author._id': req.query.user_id });
   if (!allAnswers) {
     return next(new ErrorHandler(404, "Failed to get answers."));
   }
