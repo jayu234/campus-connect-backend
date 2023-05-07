@@ -46,17 +46,7 @@ exports.updateDoubt = catchAcyncError(async (req, res, next) => {
     if (!req.body.images && (req.body.content.length < 10)) {
         return next(new ErrorHandler(400, "Please provide valid content."));
     }
-    const doubt = await Doubt.findByIdAndUpdate(req.params.id, {
-        author: {
-            _id: req.user._id,
-            username: req.user.username,
-            name: req.user.name,
-            email: req.user.email,
-            avatar: req.user.avatar
-        },
-        ...req.body,
-        edited: true
-    }, {
+    const doubt = await Doubt.findByIdAndUpdate(req.params.id, {...req.body, edited: true}, {
         new: true,
         runValidators: true,
         useFindAndModify: false

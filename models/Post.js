@@ -5,7 +5,8 @@ const postSchema = new mongoose.Schema({
         type: {
             _id: mongoose.Schema.Types.ObjectId,
             username: String,
-            name: String,
+            firstName: String,
+            lastName: String,
             email: String,
             avatar: {
                 public_id: String,

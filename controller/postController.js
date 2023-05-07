@@ -2,10 +2,28 @@ const catchAcyncError = require("../middleware/catchAcyncError");
 const Post = require("../models/Post");
 const Topic = require("../models/Topic");
 const ErrorHandler = require("../utils/ErrorHandler");
+const cloudinary = require("cloudinary").v2;
 
 exports.createPost = catchAcyncError(async (req, res, next) => {
     if (!req.body.images && (req.body.content.length < 50)) {
         return next(new ErrorHandler(400, "Please provide valid content."));
+    }
+
+    if (req.body.images) {
+        const imagesLinks = [];
+
+        for (let i = 0; i < req.body.images.length; i++) {
+            const result = await cloudinary.uploader.upload(req.body.images[i], {
+                folder: "posts",
+            });
+
+            imagesLinks.push({
+                public_id: result.public_id,
+                url: result.secure_url,
+            });
+        }
+
+        req.body.images = imagesLinks;
     }
     const post = await Post.create({
         ...req.body,
@@ -45,7 +63,7 @@ exports.updatePost = catchAcyncError(async (req, res, next) => {
     if (!req.body.images && (req.body.content.length < 50)) {
         return next(new ErrorHandler(400, "Please provide valid content."));
     }
-    const post = await Post.findByIdAndUpdate(req.params.id, { ...req.body, edited: true},{
+    const post = await Post.findByIdAndUpdate(req.params.id, { ...req.body, edited: true }, {
         new: true,
         runValidators: true,
         useFindAndModify: false
@@ -116,7 +134,6 @@ exports.getPostDetails = catchAcyncError(async (req, res, next) => {
 })
 
 exports.getAllPostsOfUser = catchAcyncError(async (req, res, next) => {
-    console.log(req.query.user_id);
     const allPosts = await Post.find({ 'author._id': req.query.user_id });
     if (!allPosts) {
         return next(new ErrorHandler(404, "Failed to get all posts"));

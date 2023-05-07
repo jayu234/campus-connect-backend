@@ -16,7 +16,8 @@ exports.createAnswer = catchAcyncError(async (req, res, next) => {
       author: {
         _id: req.user._id,
         username: req.user.username,
-        name: req.user.name,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
         email: req.user.email,
         avatar: req.user.avatar
       },
@@ -47,17 +48,7 @@ exports.updateAnswer = catchAcyncError(async (req, res, next) => {
   if (!req.body.images && (req.body.content.length < 10)) {
     return next(new ErrorHandler(400, "Please provide valid content."));
   }
-  const answer = await Answer.findByIdAndUpdate(req.params.id, {
-    author: {
-      _id: req.user._id,
-      username: req.user.username,
-      name: req.user.name,
-      email: req.user.email,
-      avatar: req.user.avatar
-    },
-    ...req.body,
-    edited: true
-  }, {
+  const answer = await Answer.findByIdAndUpdate(req.params.id, {...req.body,edited: true}, {
     new: true,
     runValidators: true,
     useFindAndModify: false
@@ -76,7 +67,7 @@ exports.deleteAnswer = catchAcyncError(async (req, res, next) => {
   if (!answer) {
     return next(new ErrorHandler(500, "Failed to delete the answer."));
   }
-
+  await Doubt.findOneAndUpdate({_id: answer.doubt._id},{$pull: { answers: answer._id }})
   return res.status(200).json({
     success: true,
     message: "Answer deleted successfully."

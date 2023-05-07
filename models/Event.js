@@ -5,7 +5,8 @@ const eventSchema = new mongoose.Schema({
         type: {
             _id: mongoose.Schema.Types.ObjectId,
             username: String,
-            name: String,
+            firstName: String,
+            lastName: String,
             email: String,
             avatar: {
                 public_id: String,
@@ -27,7 +28,8 @@ const eventSchema = new mongoose.Schema({
     image: {
         type: {
             public_id: { type: String },
-            url: { type: String }
+            url: { type: String },
+            _id: false
         }
     },
     likes: [{
