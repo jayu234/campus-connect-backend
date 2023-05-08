@@ -11,7 +11,7 @@ exports.createUser = catchAcyncError(async (req, res, next) => {
     if (req.body.role) {
         return next(new ErrorHandler(400, "Invalid request!!"));
     }
-    const isExisting = await User.findOne({ $match: { email: req.body.email, username: req.body.username, phone: req.body.phone } });
+    const isExisting = await User.findOne({ email: req.body.email, username: req.body.username, phone: req.body.phone });
     if (isExisting) {
         return next(new ErrorHandler("User already exist."));
     }
@@ -28,7 +28,7 @@ exports.createUser = catchAcyncError(async (req, res, next) => {
             }
         });
     }
-    // sendToken(user, res, 201, "Signed up successfully")
+    sendToken(user, res, 201, "Signed up successfully")
     const result = await Topic.bulkWrite(bulkOps);
     if (!user || !result) {
         return next(new ErrorHandler(500, "Signup failed."));
